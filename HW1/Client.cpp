@@ -10,6 +10,9 @@ const char ADDR[] = "127.0.0.1";
 const int BUFFER_SIZE = 2048;
 const int timeout = 1000;
 
+// <summary>Start UDP Echo Client. This program can receive up to 2 arguments. Client exits when receives "BYE"</summary>
+// <argument name="address">Server's address</argument>
+// <argument name="port">Server's port</argument>
 int main(int argc, char* argv[])
 {
 	WSADATA wsa_data;
@@ -32,17 +35,32 @@ int main(int argc, char* argv[])
 	if (argc == 1)
 	{
 		server_addr.sin_port = htons((u_short) PORT);
-		inet_pton(AF_INET, ADDR, (void*) &(server_addr.sin_addr.s_addr));
+		if (inet_pton(AF_INET, ADDR, (void*) &(server_addr.sin_addr.s_addr)) != 1)
+		{
+			cerr << "Can not convert little-endian to big-endian" << endl;
+
+			return 1;
+		}
 	}
 	else if (argc == 2)
 	{
 		server_addr.sin_port = htons((u_short) PORT);
-		inet_pton(AF_INET, argv[1], (void*)  &(server_addr.sin_addr.s_addr));
+		if (inet_pton(AF_INET, argv[1], (void*)  &(server_addr.sin_addr.s_addr)) != 1)
+		{
+			cerr << "Can not convert little-endian to big-endian" << endl;
+
+			return 1;
+		}
 	}
 	else
 	{
 		server_addr.sin_port = htons((u_short) stoi(argv[2]));
-		inet_pton(AF_INET, argv[1], (void*) &(server_addr.sin_addr.s_addr));
+		if (inet_pton(AF_INET, argv[1], (void*) &(server_addr.sin_addr.s_addr)) != 1)
+		{
+			cerr << "Can not convert little-endian to big-endian" << endl;
+
+			return 1;
+		}
 	}
 
 	char buffer[BUFFER_SIZE];
@@ -56,17 +74,25 @@ int main(int argc, char* argv[])
 
 		ret = sendto(client, buffer, strlen(buffer), 0, (sockaddr *) &server_addr, server_addr_len);
 
+		_strupr_s(buffer, BUFFER_SIZE);
+
+		if (strcmp(buffer, "BYE") == 0)
+		{
+			break;
+		}
+
 		if (ret == SOCKET_ERROR)
 		{
 			cerr << "Can not send to server! Error code: " << WSAGetLastError() << endl;
+
+			continue;
 		}
 		else
 		{
 			cout << "Sent " << ret << " bytes to server!" << endl;
 		}
 
-
-		ret	= recvfrom(client, buffer, BUFFER_SIZE, 0, (sockaddr *) &server_addr, &server_addr_len);
+		ret = recvfrom(client, buffer, BUFFER_SIZE, 0, (sockaddr *) &server_addr, &server_addr_len);
 
 		if (ret == SOCKET_ERROR)
 		{
@@ -92,12 +118,10 @@ int main(int argc, char* argv[])
 				<< "[" << addr << ":" << ntohs(server_addr.sin_port) << "]: "
 				<< buffer
 				<< endl;
-		} 
+		}
 
 		cout << endl;
-
-		_strupr_s(buffer, BUFFER_SIZE);
-	} while (strcmp(buffer, "BYE") != 0);
+	}
 
 	closesocket(client);
 

@@ -10,9 +10,6 @@ const int PORT = 5000;
 const char ADDR[] = "127.0.0.1";
 const int BUFFER_SIZE = 2048;
 
-// <summary>Start UDP Echo Server. This program can receive up to 2 arguments</summary>
-// <argument name="address">Server's address</argument>
-// <argument name="port">Server's port</argument>
 int main(int argc, char* argv[])
 {
 	WSADATA wsa_data;
@@ -30,35 +27,21 @@ int main(int argc, char* argv[])
 	sockaddr_in server_addr;
 	server_addr.sin_family = AF_INET;
 
+	// TODO: Add handler for `inet_pton` failure
 	if (argc == 1)
 	{
 		server_addr.sin_port = htons((u_short) PORT);
-		if (inet_pton(AF_INET, ADDR, (void*) &(server_addr.sin_addr.s_addr)) != 1)
-		{
-			cerr << "Can not convert little-endian to big-endian" << endl;
-
-			return 1;
-		}
+		inet_pton(AF_INET, ADDR, (void*) &(server_addr.sin_addr.s_addr));
 	}
 	else if (argc == 2)
 	{
 		server_addr.sin_port = htons((u_short) PORT);
-		if (inet_pton(AF_INET, argv[1], (void*)  &(server_addr.sin_addr.s_addr)) != 1)
-		{
-			cerr << "Can not convert little-endian to big-endian" << endl;
-
-			return 1;
-		}
+		inet_pton(AF_INET, argv[1], (void*)  &(server_addr.sin_addr.s_addr));
 	}
 	else
 	{
 		server_addr.sin_port = htons((u_short) stoi(argv[2]));
-		if (inet_pton(AF_INET, argv[1], (void*) &(server_addr.sin_addr.s_addr)) != 1)
-		{
-			cerr << "Can not convert little-endian to big-endian" << endl;
-
-			return 1;
-		}
+		inet_pton(AF_INET, argv[1], (void*) &(server_addr.sin_addr.s_addr));
 	}
 
 	if (bind(server, (sockaddr *) &server_addr, sizeof(server_addr)))
